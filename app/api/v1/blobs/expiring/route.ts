@@ -12,7 +12,7 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   const incomingUrl = new URL(request.url);
-  const upstreamUrl = new URL("/v1/blobs/expiring", BACKEND_BASE_URL);
+  const upstreamUrl = new URL("/api/v1/blobs/expiring", BACKEND_BASE_URL);
   upstreamUrl.search = incomingUrl.search;
 
   const upstreamResponse = await fetch(upstreamUrl.toString(), {
