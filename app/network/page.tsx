@@ -9,6 +9,11 @@
  * 3. Timeseries tab: +2 charts — Pending/Deleted + Avg Blob Size (matches Figure 3)
  * 4. Benchmark tab: +4 charts — Score/Upload/Latency/TXConfirm history (matches Figure 5)
  * 5. PATCH v3.1: Added NHICard to Overview tab and ActivityFeed to Explorer tab (Additive)
+ * 6. PATCH v3.2: Replaced the in-page "Explorer" tab (link-out cards + ActivityFeed
+ *    summary) with the Blob Expiry Monitor. The full Blob Explorer at /explorer is
+ *    unaffected — this only removes the thin summary panel that used to live inside
+ *    this Network page's tab bar. ActivityFeed import removed as it had no other
+ *    consumer in this file.
  */
 
 import { useEffect, useState, useRef, useCallback, Suspense } from "react";
@@ -27,7 +32,6 @@ const TimeseriesChart = dynamic(
 
 // STEP 1 — Add imports from NETWORK PAGE PATCH
 import { NHICard }      from "@/components/nhi-badge";
-import { ActivityFeed } from "@/components/activity-feed";
 
 // A3 — SP distribution by AZ (UPGRADE_ROADMAP.md). Renamed from QuorumHealthByAZ
 // in v2.0: the on-chain quorum constant (12) is per-placement-group, not
@@ -38,9 +42,10 @@ import { SpDistributionByAZ } from "@/components/quorum-health-az";
 // Replaces the static "Live data from Aptos Testnet RPC" badge below, which
 // becomes a false claim after shutdown — see component file header.
 import { TestnetRetirementBanner } from "@/components/testnet-retirement-banner";
+import { BlobExpiryMonitor } from "@/components/blob-expiry-monitor";
 
 type TimeRange = "1h" | "24h" | "7d" | "30d";
-type TabId = "overview" | "timeseries" | "epoch" | "benchmark" | "explorer";
+type TabId = "overview" | "timeseries" | "epoch" | "benchmark" | "expiry";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface StatsLiveResponse {
@@ -342,49 +347,6 @@ function EpochCountdown({ epoch }: { epoch: EpochData }) {
           </div>
         );
       })}
-    </div>
-  );
-}
-
-// ─── Explorer Embed ───────────────────────────────────────────────────────────
-function ExplorerEmbed({ network }: { network: string }) {
-  return (
-    <div style={{ display:"flex", flexDirection:"column", gap:20 }}>
-      <div style={{ background:"var(--bg-card2)", border:"1px solid var(--border)", borderRadius:12, padding:"20px 24px", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:14 }}>
-        <div>
-          <div style={{ fontSize:16, fontWeight:700, color:"var(--text-primary)", marginBottom:4 }}>Blob & Transaction Explorer</div>
-          <div style={{ fontSize:13, color:"var(--text-muted)" }}>Browse recent on-chain activity, search blobs by ID or address, and view the SP directory.</div>
-        </div>
-        <a href={`/explorer${network==="testnet"?"?network=testnet":""}`} style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"10px 20px", borderRadius:10, background:"var(--accent)", color:"#fff", fontSize:14, fontWeight:600, textDecoration:"none", flexShrink:0 }}
-          onMouseEnter={e=>(e.currentTarget.style.opacity="0.88")} onMouseLeave={e=>(e.currentTarget.style.opacity="1")}>
-          Open Explorer ↗
-        </a>
-      </div>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:12 }}>
-        {[
-          { icon:"↯", label:"Recent Transactions", sub:"Latest on-chain activity" },
-          { icon:"◈", label:"Browse Blobs", sub:"Active, pending, deleted" },
-          { icon:"◎", label:"SP Directory", sub:"All storage providers" },
-        ].map(({ icon, label, sub }) => (
-          <a key={label} href={`/explorer${network==="testnet"?"?network=testnet":""}`} style={{ textDecoration:"none" }}>
-            <div style={{ background:"var(--bg-card)", border:"1px solid var(--border)", borderRadius:12, padding:"16px 18px", cursor:"pointer", transition:"border-color 0.15s" }}
-              onMouseEnter={e=>{e.currentTarget.style.borderColor="var(--accent)";e.currentTarget.style.background="var(--bg-card2)";}}
-              onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--border)";e.currentTarget.style.background="var(--bg-card)";}}>
-              <div style={{ fontSize:22, marginBottom:8, opacity:0.6 }}>{icon}</div>
-              <div style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)", marginBottom:3 }}>{label}</div>
-              <div style={{ fontSize:11, color:"var(--text-muted)" }}>{sub}</div>
-            </div>
-          </a>
-        ))}
-      </div>
-
-      {/* STEP 3 — ActivityFeed in the Explorer tab (Additive) */}
-      <div style={{ marginTop: 32 }}>
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 12 }}>
-          Live Activity
-        </h3>
-        <ActivityFeed network={network} height={420} />
-      </div>
     </div>
   );
 }
@@ -815,7 +777,7 @@ function TabReader({ onTab }: { onTab: (t: TabId) => void }) {
   const searchParams = useSearchParams();
   useEffect(() => {
     const t = searchParams?.get("tab") as TabId | null;
-    if (t && ["overview","timeseries","epoch","benchmark","explorer"].includes(t)) onTab(t);
+    if (t && ["overview","timeseries","epoch","benchmark","expiry"].includes(t)) onTab(t);
   }, [searchParams, onTab]);
   return null;
 }
@@ -894,7 +856,7 @@ export default function NetworkPage() {
     { id:"timeseries", label:"Timeseries", icon:"▲" },
     { id:"epoch",      label:"Epoch",      icon:"⬡" },
     { id:"benchmark",  label:"Benchmark",  icon:"⚡" },
-    { id:"explorer",   label:"Explorer",   icon:"↯" },
+    { id:"expiry",     label:"Expiry Monitor", icon:"⏳" },
   ];
 
   return (
@@ -939,7 +901,7 @@ export default function NetworkPage() {
           {tab==="timeseries" && <TimeseriesTab network={network} isTestnet={isTestnet} accentColor={accentColor} />}
           {tab==="epoch"      && <EpochTab network={network} />}
           {tab==="benchmark"  && <BenchmarkTab />}
-          {tab==="explorer"   && <ExplorerEmbed network={network} />}
+          {tab==="expiry"     && <BlobExpiryMonitor network={network} />}
         </div>
       </div>
 
