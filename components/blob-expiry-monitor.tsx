@@ -182,8 +182,22 @@ export function BlobExpiryMonitor({ network = "shelbynet" }: BlobExpiryMonitorPr
   const chartOption = {
     tooltip: {
       trigger: "item",
+      confine: true,
       formatter: (p: { name: string; value: number; percent: number }) =>
         `${p.name}: ${num(p.value).toLocaleString("en-US")} (${p.percent}%)`,
+      position: (
+        point: [number, number],
+        _params: unknown,
+        _dom: unknown,
+        _rect: unknown,
+        size: { viewSize: [number, number]; contentSize: [number, number] }
+      ) => {
+        // Always render below the donut, horizontally centered — never on
+        // top of the ring itself, regardless of which slice is hovered.
+        const x = Math.max(0, (size.viewSize[0] - size.contentSize[0]) / 2);
+        const y = size.viewSize[1] + 10;
+        return [x, y];
+      },
     },
     color: [COLOR_EXPIRING, COLOR_OVERDUE],
     series: [
