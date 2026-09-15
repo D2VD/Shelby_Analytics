@@ -23,6 +23,7 @@ type EventKind =
   | "epoch_transition"
   | "blob_registered"
   | "blob_pending"
+  | "blob_activated"
   | "blob_deleted"
   | "heartbeat";
 
@@ -96,6 +97,14 @@ const EVENT_CFG: Record<EventKind, EventCfg> = {
     color:   "text-yellow-400",
     visible: true,
   },
+
+  blob_activated: {
+    icon:    "✅",
+    label:   (p) => `Blob activated: ${String(p["blobName"] ?? "")}`,
+    color:   "text-emerald-400",
+    visible: true,
+  },
+
   blob_deleted: {
     icon:    "🗑",
     label:   (p) => `Blob deleted: ${String(p["blobName"] ?? "")}`,
@@ -203,6 +212,7 @@ export function ActivityFeed({
       es.addEventListener("epoch_transition", (e) => push("epoch_transition", e.data));
       es.addEventListener("blob_registered",  (e) => push("blob_registered",  e.data));
       es.addEventListener("blob_pending",     (e) => push("blob_pending",     e.data));
+      es.addEventListener("blob_activated",   (e) => push("blob_activated",  e.data));
       es.addEventListener("blob_deleted",     (e) => push("blob_deleted",     e.data));
       es.addEventListener("heartbeat",        (e) => push("heartbeat",        JSON.stringify({ timestamp: e.data })));
     }
