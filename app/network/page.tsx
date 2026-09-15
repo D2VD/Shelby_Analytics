@@ -21,6 +21,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useNetwork } from "@/components/network-context";
 import type { TsChartPoint } from "@/components/timeseries-chart";
+import { ChangelogPanel } from "@/components/changelog-panel";
 
 // TabTimeseries — eCharts, dynamically loaded (ssr:false) matching this
 // project's existing convention for other browser-only visual libs (map
@@ -45,7 +46,7 @@ import { TestnetRetirementBanner } from "@/components/testnet-retirement-banner"
 import { BlobExpiryMonitor } from "@/components/blob-expiry-monitor";
 
 type TimeRange = "1h" | "24h" | "7d" | "30d";
-type TabId = "overview" | "timeseries" | "epoch" | "benchmark" | "expiry";
+type TabId = "overview" | "timeseries" | "epoch" | "benchmark" | "expiry" | "changelog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface StatsLiveResponse {
@@ -777,7 +778,7 @@ function TabReader({ onTab }: { onTab: (t: TabId) => void }) {
   const searchParams = useSearchParams();
   useEffect(() => {
     const t = searchParams?.get("tab") as TabId | null;
-    if (t && ["overview","timeseries","epoch","benchmark","expiry"].includes(t)) onTab(t);
+    if (t && ["overview","timeseries","epoch","benchmark","expiry","changelog"].includes(t)) onTab(t);
   }, [searchParams, onTab]);
   return null;
 }
@@ -857,6 +858,7 @@ export default function NetworkPage() {
     { id:"epoch",      label:"Epoch",      icon:"⬡" },
     { id:"benchmark",  label:"Benchmark",  icon:"⚡" },
     { id:"expiry",     label:"Expiry Monitor", icon:"⏳" },
+    { id:"changelog",  label:"Changelog",  icon:"▤" },
   ];
 
   return (
@@ -902,6 +904,7 @@ export default function NetworkPage() {
           {tab==="epoch"      && <EpochTab network={network} />}
           {tab==="benchmark"  && <BenchmarkTab />}
           {tab==="expiry"     && <BlobExpiryMonitor network={network} />}
+          {tab==="changelog"  && <ChangelogPanel network={network} />}
         </div>
       </div>
 
