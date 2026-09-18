@@ -18,9 +18,15 @@
 // Click-to-detail (2026-09-18): each event is now clickable, opening a
 // modal with the full timestamp, the raw `payload` fields in readable
 // form, and a contextual link. Confirmed live via
-// `GET /api/v1/changelog` that `payload` is already returned unfiltered
-// (sp_joined/sp_left → { address, network }, epoch_transition →
-// { epochType, epoch, network }) — no backend change needed. Links use
+// `GET /api/v1/changelog` that `payload` is already returned unfiltered.
+// Payload enrichment (2026-09-18, changelog-poller.ts v1.2): sp_joined/
+// sp_left now include an optional `availabilityZone` (present whenever
+// the SP's AZ was known at diff time — omitted otherwise, never a
+// placeholder), and epoch_transition now includes an optional
+// `startedAt` (the real on-chain epoch start time, not poll-detection
+// time). Both are omitted from payload rather than sent as null when
+// unavailable, so this component's generic field renderer needs no
+// special-case handling for their absence. Links use
 // existing routes with no new query-param handling required on either
 // target page: SP events link to `/explorer?q={address}` (resolves to
 // that address's account panel via app/explorer/page.tsx's existing `q`
@@ -41,7 +47,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function formatPayloadValue(value: unknown): string {
+function formatPayloadValue(key: string, value: unknown): string {
+  if (key === "startedAt" && typeof value === "string") {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) return parsed.toLocaleString("en-US");
+  }
   if (typeof value === "string" || typeof value === "number") return String(value);
   return JSON.stringify(value);
 }
@@ -101,6 +111,8 @@ const PAYLOAD_FIELD_LABELS: Record<string, string> = {
   address: "Address",
   epochType: "Epoch type",
   epoch: "Epoch number",
+  availabilityZone: "Availability zone",
+  startedAt: "Started at",
 };
 
 interface ContextualLink {
@@ -243,7 +255,7 @@ function EventDetailModal({ event, onClose }: EventDetailModalProps) {
                     wordBreak: "break-all",
                   }}
                 >
-                  {formatPayloadValue(value)}
+                  {formatPayloadValue(key, value)}
                 </span>
               </div>
             ))}
