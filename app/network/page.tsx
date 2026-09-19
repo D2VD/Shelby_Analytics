@@ -271,7 +271,7 @@ function BlobBreakdown({ snap }: { snap: StatsLiveResponse }) {
         </div>
       ))}
       <div style={{ marginTop:8, paddingTop:6, borderTop:"1px solid var(--border-soft)", display:"flex", justifyContent:"space-between" }}>
-        <span style={{ fontSize:11, color:"var(--text-dim)" }}>Total (is_written=1)</span>
+        <span style={{ fontSize:11, color:"var(--text-dim)" }}>Total</span>
         <span style={{ fontSize:13, fontWeight:800, color:"var(--accent)", fontFamily:"monospace" }}>{fmt(snap.totalBlobs)}</span>
       </div>
     </div>
@@ -363,11 +363,11 @@ function OverviewTab({ network, snap, series, loading, nhi, isTestnet, accentCol
     { label:"Storage Providers", value:fmt(snap?.storageProviders),    sub:`+${snap?.waitlistedProviders??0} waitlisted`, icon:"◎", color:"#0891b2" },
     { label:"Placement Groups",  value:fmt(snap?.placementGroups),     sub:"Epoch registry",              icon:"▦", color:"#d97706" },
     { label:"Slices",            value:fmt(snap?.slices),               sub:"Slice registry",              icon:"⬡", color:"#7c3aed" },
-    { label:"Total Blobs",       value:fmt(snap?.totalBlobs),           sub:"is_written=1",                icon:"◈", color:"#9333ea" },
+    { label:"Total Blobs",       value:fmt(snap?.totalBlobs),                icon:"◈", color:"#9333ea" },
   ] : [
-    { label:"Total Blobs",       value:fmt(snap?.totalBlobs),           sub:"is_written=1 (matches Explorer)", icon:"◈", color:"#2563eb" },
+    { label:"Total Blobs",       value:fmt(snap?.totalBlobs),           icon:"◈", color:"#2563eb" },
     { label:"Storage Used",      value:fmtBytes(snap?.totalStorageBytes), sub:snap?.totalStorageGiB?`${Number(snap.totalStorageGiB).toFixed(2)} GiB`:"", icon:"▣", color:"#059669" },
-    { label:"Active Blobs",      value:fmt(snap?.activeBlobs),         sub:"is_written=1, is_deleted=0",  icon:"◎", color:"#22c55e" },
+    { label:"Active Blobs",      value:fmt(snap?.activeBlobs),           icon:"◎", color:"#22c55e" },
     { label:"Storage Providers", value:fmt(snap?.storageProviders),    sub:"Active SPs on-chain",         icon:"◎", color:"#0891b2" },
     { label:"Placement Groups",  value:fmt(snap?.placementGroups),     sub:"Erasure code groups",         icon:"▦", color:"#d97706" },
     { label:"Slices",            value:fmt(snap?.slices),               sub:"Slice registry count",        icon:"⬡", color:"#7c3aed" },
@@ -641,9 +641,9 @@ function EpochTab({ network }: { network: string }) {
           ))}
         </div>
       )}
-      <div style={{ marginTop:14, background:"var(--bg-card2)", border:"1px solid var(--border)", borderRadius:10, padding:"12px 16px", fontSize:11, color:"var(--text-dim)", fontFamily:"monospace" }}>
-        Contract: 0x85fdb9a1… · Epoch data from Shelby::epoch::Epoch resource
-      </div>
+      {/* <div style={{ marginTop:14, background:"var(--bg-card2)", border:"1px solid var(--border)", borderRadius:10, padding:"12px 16px", fontSize:11, color:"var(--text-dim)", fontFamily:"monospace" }}>
+        Contract: 0x85fdb9a1… 
+      </div> */}
     </div>
   );
 }
@@ -908,9 +908,9 @@ export default function NetworkPage() {
         </div>
       </div>
 
-      <div style={{ marginTop:14, fontSize:11, color:"var(--text-dim)", fontFamily:"monospace", textAlign:"right" }}>
+      {/* <div style={{ marginTop:14, fontSize:11, color:"var(--text-dim)", fontFamily:"monospace", textAlign:"right" }}>
         {isTestnet ? "Source: Aptos Testnet REST API · Total Blobs = is_written=1" : "Source: Shelby Dedicated Indexer · Total Blobs = is_written=1 (matches shelby.xyz Explorer)"}
-      </div>
+      </div> */}
 
       <Suspense fallback={null}>
         <TabReader onTab={t=>setTab(t)} />
